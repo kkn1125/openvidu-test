@@ -8,7 +8,10 @@ var session;
 
 window.addEventListener("submit", (e) => {
   const target = e.target;
-  joinSession();
+  if (target.id !== "otm") joinSession();
+  else {
+    joinOneToManyJoin();
+  }
 });
 
 window.addEventListener("click", (e) => {
@@ -16,6 +19,45 @@ window.addEventListener("click", (e) => {
     leaveSession();
   }
 });
+
+function joinOneToManyJoin() {
+  var mySessionId = document.getElementById("sessionId2").value;
+
+  OV = new OpenVidu();
+  session = OV.initSession();
+
+  session.on("streamCreated", function (event) {
+    session.subscribe(event.stream, "subscriber");
+  });
+
+  getToken(mySessionId).then(({ data }) => {
+    console.log("✅ token check", data);
+
+    console.log("is admin?", data.isAdmin);
+    session
+      .connect(data.token)
+      .then(() => {
+        document.getElementById("session-header").innerText = mySessionId;
+        document.getElementById("join").style.display = "none";
+        document.getElementById("session").style.display = "block";
+
+        if (data.isAdmin) {
+          var publisher = OV.initPublisher("publisher");
+          session.publish(publisher);
+        } else {
+          var publisher = OV.initPublisher("publisher");
+          session.publish(publisher);
+        }
+      })
+      .catch((error) => {
+        console.log(
+          "There was an error connecting to the session:",
+          error.code,
+          error.message
+        );
+      });
+  });
+}
 
 function joinSession() {
   var mySessionId = document.getElementById("sessionId").value;
@@ -28,10 +70,26 @@ function joinSession() {
   });
 
   getToken(mySessionId).then(({ data }) => {
-    console.log("✅ token check", data.token);
+    console.log("✅ token check", data);
+    console.log(
+      data.token.replace(
+        /ws:\/\/localhost:4443/g,
+        location.hostname === "localhost"
+          ? "ws://localhost:4443"
+          : "wss://df19-61-74-229-172.jp.ngrok.io"
+      )
+    );
     session
-      .connect(data.token.replace(/192\.168\.88\.234/g, "localhost"))
+      .connect(
+        data.token.replace(
+          /ws:\/\/localhost:4443/g,
+          location.hostname === "localhost"
+            ? "ws://localhost:4443"
+            : "wss://df19-61-74-229-172.jp.ngrok.io"
+        )
+      )
       .then(() => {
+        console.log(123)
         document.getElementById("session-header").innerText = mySessionId;
         document.getElementById("join").style.display = "none";
         document.getElementById("session").style.display = "block";
@@ -74,8 +132,12 @@ window.onbeforeunload = function () {
  * Visit https://docs.openvidu.io/en/stable/application-server to learn
  * more about the integration of OpenVidu in your application server.
  */
-
-var APPLICATION_SERVER_URL = "/api/openvidu";
+//778e-61-74-229-172.jp.ngrok.io
+var APPLICATION_SERVER_URL =
+  (location.hostname === "localhost" ? "http://" : "/proxy") +
+  (location.hostname === "localhost" ? "localhost" : "") +
+  (location.hostname === "localhost" ? ":" + 5000 : "") +
+  "";
 const SECRET = "Basic T1BFTlZJRFVBUFA6TVlfU0VDUkVU";
 
 // axios.defaults.withCredentials = true;
@@ -92,18 +154,26 @@ window.addEventListener("load", () => {
     .then((result) => {
       const { data } = result;
       console.log(data);
+      data?.content?.forEach((content) => {
+        document.getElementById("room-list").innerHTML = `<li>
+          <span>${data.id}</span>
+          <span>${new Date(data.createdAt).toLocaleString("ko")}</span>
+        </li>`;
+      });
     });
 });
 
 function getToken(mySessionId) {
-  return createSession(mySessionId).then(({ data }) =>
-    createToken(data.sessionId)
-  );
+  console.log(mySessionId);
+  return createSession(mySessionId).then(({ data }) => {
+    console.log(data);
+    return createToken(data);
+  });
 }
 
 function createSession(sessionId) {
   return axios.post(
-    APPLICATION_SERVER_URL + "/api/sessions",
+    APPLICATION_SERVER_URL + `/api/sessions`,
     {
       customSessionId: sessionId,
     },
@@ -117,8 +187,9 @@ function createSession(sessionId) {
 }
 
 function createToken(sessionId) {
+  console.log(sessionId);
   return axios.post(
-    APPLICATION_SERVER_URL + "/api/sessions/" + sessionId + "/connection",
+    APPLICATION_SERVER_URL + "/api/sessions/" + sessionId + "/connections",
     JSON.stringify({ sessionId }),
     {
       headers: {

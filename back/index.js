@@ -12,7 +12,7 @@ const axios = require("axios");
 // Environment variable: PORT where the node server is listening
 var SERVER_PORT = process.env.SERVER_PORT || 5000;
 // Environment variable: URL where our OpenVidu server is listening
-var OPENVIDU_URL = process.env.OPENVIDU_URL || "http://localhost:4443";
+var OPENVIDU_URL = process.env.OPENVIDU_OTHER_URL || "http://localhost:4443";
 // Environment variable: secret shared with our OpenVidu server
 var OPENVIDU_SECRET = process.env.OPENVIDU_SECRET || "MY_SECRET";
 console.log(SERVER_PORT, OPENVIDU_URL, OPENVIDU_SECRET);
@@ -23,9 +23,10 @@ app.use(
   })
 );
 
+const roomMap = new Map();
+
 var server = http.createServer(app);
 var openvidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
-console.log(OPENVIDU_URL);
 // Allow application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 // Allow application/json
@@ -43,7 +44,6 @@ server.listen(SERVER_PORT, () => {
 app.get("/api/sessions", async (req, res) => {
   // console.log(1);
   let sessions = openvidu.activeSessions;
-  console.log(sessions);
   // console.log(JSON.stringify(sessions))
   // try {
   //   const result = await axios.get(OPENVIDU_URL + "/api/sessions", {
@@ -61,8 +61,10 @@ app.get("/api/sessions", async (req, res) => {
 });
 
 app.post("/api/sessions", async (req, res) => {
+  console.log("온다!");
+
+  // notion 참조 원복하려면 필요 토큰 조정함
   var session = await openvidu.createSession(req.body);
-  console.log(session)
   res.send(session.sessionId);
 });
 
@@ -70,12 +72,29 @@ app.post("/api/sessions/:sessionId/connections", async (req, res) => {
   var session = openvidu.activeSessions.find(
     (s) => s.sessionId === req.params.sessionId
   );
-  console.log(session);
+  let isAdmin = false;
+  if (roomMap.get(req.params.sessionId) === true) {
+    isAdmin = false;
+  } else {
+    if (roomMap.get(req.params.sessionId) === undefined) {
+      roomMap.set(req.params.sessionId, true);
+      isAdmin = true;
+    }
+  }
+
   if (!session) {
     res.status(404).send();
   } else {
     var connection = await session.createConnection(req.body);
-    res.send(connection.token);
+    console.log(connection);
+
+    console.log("connection", isAdmin);
+    res.send(
+      JSON.stringify({
+        token: connection.token,
+        isAdmin: isAdmin,
+      })
+    );
   }
 });
 

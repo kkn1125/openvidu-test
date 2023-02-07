@@ -23,30 +23,31 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
       },
       cors: true,
       proxy: {
-        "/api/openvidu": {
-          target: "https://192.168.88.234",
+        "/proxy": {
+          target: "https://cbb4-61-74-229-172.jp.ngrok.io",
           // target: "https://localhost",
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/\/api/, ""),
+          rewrite: (path) => path.replace(/^\/proxy/, ""),
         },
-        "/openvidu": {
-          target: "wss://192.168.88.234",
-          changeOrigin: true,
-          secure: false,
-          // rewrite: (path) => {
-          //   console.log('✅ path!',path);
-          //   return path.replace(/wss\:\/\/192\.168\.88\.234\/openvidu/, "");
-          // },
-          ws: true,
-        },
+        // "/openvidu": {
+        //   target: "wss://2e98-61-74-229-172.jp.ngrok.io",
+        //   changeOrigin: true,
+        //   secure: false,
+        //   rewrite: (path) => {
+        //     console.log("✅ path!", path);
+        //     return path.replace(/\/openvidu/, "");
+        //   },
+        //   ws: true,
+        // },
       },
       https: true,
-      hmr: {
-        protocol: 'wss',
-        host: "192.168.88.234",
-        path: "/openvidu",
-      },
+      // hmr: {
+      //   // server: {}
+      //   // protocol: "ws",
+      //   // host: 'rtc-test.kro.kr',
+      //   // // path: "/openvidu",
+      // },
     },
     plugins: [mkcert()],
   };
