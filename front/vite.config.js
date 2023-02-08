@@ -24,7 +24,7 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
       cors: true,
       proxy: {
         "/proxy": {
-          target: "https://cbb4-61-74-229-172.jp.ngrok.io",
+          target: "https://1779-61-74-229-172.jp.ngrok.io",
           // target: "https://localhost",
           changeOrigin: true,
           secure: false,

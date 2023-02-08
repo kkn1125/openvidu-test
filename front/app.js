@@ -76,7 +76,7 @@ function joinSession() {
         /ws:\/\/localhost:4443/g,
         location.hostname === "localhost"
           ? "ws://localhost:4443"
-          : "wss://df19-61-74-229-172.jp.ngrok.io"
+          : "wss://ced5-61-74-229-172.jp.ngrok.io"
       )
     );
     session
@@ -85,7 +85,7 @@ function joinSession() {
           /ws:\/\/localhost:4443/g,
           location.hostname === "localhost"
             ? "ws://localhost:4443"
-            : "wss://df19-61-74-229-172.jp.ngrok.io"
+            : "wss://ced5-61-74-229-172.jp.ngrok.io"
         )
       )
       .then(() => {

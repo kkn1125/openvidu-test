@@ -41,6 +41,11 @@ server.listen(SERVER_PORT, () => {
   console.warn("Application server connecting to OpenVidu at " + OPENVIDU_URL);
 });
 
+app.use((req, res, next) => {
+  console.log(req.url);
+  next();
+});
+
 app.get("/api/sessions", async (req, res) => {
   // console.log(1);
   let sessions = openvidu.activeSessions;
